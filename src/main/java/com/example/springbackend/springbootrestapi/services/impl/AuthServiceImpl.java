@@ -8,6 +8,8 @@ import com.example.springbackend.springbootrestapi.exceptions.BlogApiException;
 import com.example.springbackend.springbootrestapi.payloads.*;
 import com.example.springbackend.springbootrestapi.repository.RoleRepository;
 import com.example.springbackend.springbootrestapi.repository.UserRepository;
+import com.example.springbackend.springbootrestapi.security.JwtTokenProvider;
+
 import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,25 +27,29 @@ public class AuthServiceImpl implements AuthService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
+    private JwtTokenProvider jwtTokenProvider;
 
     public AuthServiceImpl(AuthenticationManager authenticationManagerRes,
     UserRepository userRepository,
     RoleRepository roleRepository,
-    PasswordEncoder passwordEncoder
+    PasswordEncoder passwordEncoder,
+    JwtTokenProvider jwtTokenProvider
     ){
         this.authenticationManager=authenticationManagerRes;
         this.passwordEncoder=passwordEncoder;
         this.roleRepository=roleRepository;
         this.userRepository=userRepository;
+        this.jwtTokenProvider=jwtTokenProvider;
     }
 
     @Override
     public String login(LoginDto loginDto){
         Authentication authentication=authenticationManager.
         authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmailOrUsername(), loginDto.getPassword()));
+        String token=jwtTokenProvider.generateToken(authentication);
         //we have to store the authentication  object into the securityContextHolder....
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return "User logged in successfully";
+        return token;
     }
 
     @Override

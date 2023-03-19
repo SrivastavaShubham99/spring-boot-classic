@@ -1,5 +1,7 @@
 package com.example.springbackend.springbootrestapi.controller;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +34,7 @@ public class CommentController {
 
     @GetMapping("posts/{id}/comments")
     List<CommentsDto> getCommentsByPostId(@PathVariable("id")long id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return commentsService.getCommentsByPostId(id);
     }   
 

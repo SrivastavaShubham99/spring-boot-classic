@@ -12,14 +12,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.example.springbackend.springbootrestapi.security.JwtRequestFilter;
+
 @Configuration
 @EnableMethodSecurity
-public class SecurityConfig {
+public class SecurityConfig  {
 
     private UserDetailsService userDetailsService;
+    private JwtRequestFilter jwtRequestFilter;
 
-    public SecurityConfig(UserDetailsService userDetailsService){
+    public SecurityConfig(UserDetailsService userDetailsService,JwtRequestFilter jwtRequestFilter){
         this.userDetailsService = userDetailsService;
+        this.jwtRequestFilter=jwtRequestFilter;
     }
 
     @Bean
@@ -34,13 +38,13 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http.csrf().disable()
                 .authorizeHttpRequests((authorize) ->
                         //authorize.anyRequest().authenticated()
                         authorize.requestMatchers(HttpMethod.GET, "/api/**").permitAll()
-                                .requestMatchers("/api/auth/**").permitAll()
-                                .anyRequest().authenticated()
+                                 .requestMatchers(HttpMethod.POST).permitAll()
+                                 .requestMatchers("/api/auth/**").permitAll()
+                                 .anyRequest().authenticated()
 
                 );
 
