@@ -23,11 +23,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private AuthenticationManager authenticationManager;
-    private UserRepository userRepository;
-    private RoleRepository roleRepository;
-    private PasswordEncoder passwordEncoder;
-    private JwtTokenProvider jwtTokenProvider;
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public AuthServiceImpl(AuthenticationManager authenticationManagerRes,
     UserRepository userRepository,
@@ -44,13 +44,20 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String login(LoginDto loginDto){
-        Authentication authentication=authenticationManager.
-        authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmailOrUsername(), loginDto.getPassword()));
-        String token=jwtTokenProvider.generateToken(authentication);
-        //we have to store the authentication  object into the securityContextHolder....
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return token;
+        try{
+            Authentication authentication=authenticationManager.
+                    authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmailOrUsername(), loginDto.getPassword()));
+            String token=jwtTokenProvider.generateToken(authentication);
+            //we have to store the authentication  object into the securityContextHolder....
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return token;
+        }catch (Exception e){
+            throw new BlogApiException("user or password doesn't match", HttpStatus.BAD_REQUEST);
+
+        }
+
     }
+
 
     @Override
     public String register(RegisterDto registerDto) {

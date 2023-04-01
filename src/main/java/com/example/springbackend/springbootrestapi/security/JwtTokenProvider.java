@@ -24,12 +24,16 @@ public class JwtTokenProvider {
 
     // generate JWT token
     public String generateToken(Authentication authentication){
+
         String username = authentication.getName();
         Date currentDate = new Date();
-        Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
+
+
+        Date expireDate = new Date(currentDate.getTime() +  (1000 * 60 * 60 * 24));
         String token = Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
+                .claim("user",authentication.getCredentials())
                 .setExpiration(expireDate)
                 .signWith(key())
                 .compact();
@@ -49,8 +53,7 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        String username = claims.getSubject();
-        return username;
+        return claims.getSubject();
     }
 
     // validate Jwt token

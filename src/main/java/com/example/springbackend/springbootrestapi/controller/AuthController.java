@@ -1,5 +1,6 @@
 package com.example.springbackend.springbootrestapi.controller;
 
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.RestController;
 import com.example.springbackend.springbootrestapi.services.AuthService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,9 +16,11 @@ import org.springframework.http.ResponseEntity;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserDetailsService userDetailsService;
 
-    AuthController(AuthService authService){
+    AuthController(AuthService authService, UserDetailsService userDetailsService){
         this.authService=authService;
+        this.userDetailsService = userDetailsService;
     }
 
     @PostMapping(value={"/login","/signIn"})
@@ -25,7 +28,7 @@ public class AuthController {
         String response=authService.login(loginDto);
         JwtAuthResponse jwtAuthResponse=new JwtAuthResponse();
         jwtAuthResponse.setJwtToken(response);
-        return  ResponseEntity.ok(jwtAuthResponse);
+        return ResponseEntity.ok(jwtAuthResponse);
     }
 
     @PostMapping("/register")

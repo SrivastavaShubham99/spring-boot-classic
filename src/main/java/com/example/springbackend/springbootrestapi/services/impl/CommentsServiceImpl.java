@@ -55,7 +55,7 @@ public class CommentsServiceImpl implements CommentsService {
     @Override
     public List<CommentsDto> getCommentsByPostId(long id) {
         List<Comments> commentsList = commentsRepository.findByPostId(id);
-        return commentsList.stream().map(e -> mapToDto(e)).collect(Collectors.toList());
+        return commentsList.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
     @Override

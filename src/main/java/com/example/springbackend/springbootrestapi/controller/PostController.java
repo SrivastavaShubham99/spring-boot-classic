@@ -18,7 +18,7 @@ import com.example.springbackend.springbootrestapi.payloads.*;
 @RequestMapping("/api/posts")
 public class PostController {
     
-    private PostService postService;
+    private final PostService postService;
     PostController(PostService postService){
         this.postService=postService;
     }
