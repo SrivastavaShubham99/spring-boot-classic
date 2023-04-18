@@ -1,6 +1,9 @@
 
 package com.example.springbackend.springbootrestapi.services.impl;
 
+import com.example.springbackend.springbootrestapi.entity.User;
+import com.example.springbackend.springbootrestapi.repository.UserRepository;
+import com.example.springbackend.springbootrestapi.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,29 +21,42 @@ import java.util.stream.Collectors;
 @Service
 public class PostServiceimpl implements PostService {
 
-    private PostRepository postRepository;
+    private final PostRepository postRepository;
     @Autowired
-    private CommentsService commentsService;
+    private final CommentsService commentsService;
 
-    PostServiceimpl(PostRepository postRepository,CommentsService commentsService) {
+    @Autowired
+    private final UserRepository userRepository;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    PostServiceimpl(PostRepository postRepository, CommentsService commentsService, UserRepository userRepository) {
         this.postRepository = postRepository;
         this.commentsService=commentsService;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public PostDto createPost(PostDto postDto) {
-        Post post = DTOToPost(postDto);
+    public PostDto createPost(PostDto postDto,String token) {
+        String stringToConvert = String.valueOf(jwtTokenProvider.getUserId(token));
+        Long convertedLong = Long.parseLong(stringToConvert);
+        Optional<User> user=userRepository.findById(convertedLong);
+        if(user.isPresent()){
+            System.out.println("USER is here : " +  user);
+        }
+        Post post = DTOToPost(postDto,user.get());
         Post updatedPost = postRepository.save(post);
-        PostDto postDto2 = postToDTO(updatedPost);
-        return postDto2;
+        return postToDTO(updatedPost);
     }
 
     @Override
-    public PostResponse getAllPosts(int pageNo, int pageSize) {
+    public PostResponse getAllPosts(int pageNo, int pageSize,String token) {
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Post> postList = postRepository.findAll(pageable);
         List<Post> listPosts = postList.getContent();
-        List<PostDto> content = listPosts.stream().map(ele -> postToDTO(ele)).collect(Collectors.toList());
+        List<PostDto> content = listPosts.stream().map(this::postToDTO).collect(Collectors.toList());
         PostResponse postResponse = new PostResponse();
         postResponse.setContent(content);
         postResponse.setLast(postList.isLast());
@@ -60,15 +76,17 @@ public class PostServiceimpl implements PostService {
         postDto.setDescription(post.getDescription());
         postDto.setTitle(post.getTitle());
         postDto.setCommentsCount(commentsService.getCommentsByPostId(post.getId()).size());
+
         return postDto;
     }
 
-    public Post DTOToPost(PostDto postDto) {
+    public Post DTOToPost(PostDto postDto,User user) {
         Post post = new Post();
         post.setContent(postDto.getContent());
         post.setId(postDto.getPostId());
         post.setDescription(postDto.getDescription());
         post.setTitle(postDto.getTitle());
+        post.setUser(user);
         return post;
     }
 
@@ -93,5 +111,23 @@ public class PostServiceimpl implements PostService {
     public void deletePost(long id) {
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "postId", id));
         postRepository.delete(post);
+    }
+
+    @Override
+    public PostResponse getPostsByUserId(int pageNo, int pageSize, String token) {
+        String stringToConvert = String.valueOf(jwtTokenProvider.getUserId(token));
+        long convertedLong = Long.parseLong(stringToConvert);
+        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        Page<Post> postList = postRepository.findByUserId(convertedLong,pageable).get();
+        List<Post> listPosts = postList.getContent();
+        List<PostDto> content = listPosts.stream().map(this::postToDTO).collect(Collectors.toList());
+        PostResponse postResponse = new PostResponse();
+        postResponse.setContent(content);
+        postResponse.setLast(postList.isLast());
+        postResponse.setPageNo(postList.getNumber());
+        postResponse.setPageSize(postList.getSize());
+        postResponse.setTotalElements(content.size());
+        postResponse.setTotalPages(postList.getTotalPages());
+        return postResponse;
     }
 }

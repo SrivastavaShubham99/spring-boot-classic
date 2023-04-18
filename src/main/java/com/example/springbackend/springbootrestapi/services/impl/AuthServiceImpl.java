@@ -47,13 +47,16 @@ public class AuthServiceImpl implements AuthService {
         try{
             Authentication authentication=authenticationManager.
                     authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmailOrUsername(), loginDto.getPassword()));
-            String token=jwtTokenProvider.generateToken(authentication);
+            User user;
+            Optional<User> user1 = userRepository.findByUsername(loginDto.getEmailOrUsername());
+            Optional<User> user2 = userRepository.findByEmail(loginDto.getEmailOrUsername());
+            user = user1.orElseGet(user2::get);
+            String token=jwtTokenProvider.generateToken(authentication,user.getId());
             //we have to store the authentication  object into the securityContextHolder....
             SecurityContextHolder.getContext().setAuthentication(authentication);
             return token;
         }catch (Exception e){
             throw new BlogApiException("user or password doesn't match", HttpStatus.BAD_REQUEST);
-
         }
 
     }

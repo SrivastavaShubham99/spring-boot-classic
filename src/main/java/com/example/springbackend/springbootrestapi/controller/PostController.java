@@ -1,22 +1,25 @@
 package com.example.springbackend.springbootrestapi.controller;
+import com.example.springbackend.springbootrestapi.security.JwtTokenProvider;
+import com.example.springbackend.springbootrestapi.utils.JwtUtils;
+import io.jsonwebtoken.Claims;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.example.springbackend.springbootrestapi.services.PostService;
 import jakarta.validation.Valid;
 import com.example.springbackend.springbootrestapi.payloads.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
+
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(PostController.class);
+
     
     private final PostService postService;
     PostController(PostService postService){
@@ -24,17 +27,38 @@ public class PostController {
     }
 
     @PostMapping()
-    public ResponseEntity<PostDto> createPosts(@Valid @RequestBody PostDto postDto){
-        return new ResponseEntity<PostDto>(postService.createPost(postDto),HttpStatus.CREATED);
+    public ResponseEntity<PostDto> createPosts(
+            @Valid @RequestBody PostDto postDto,
+             @RequestHeader(value="Authorization") String authorizationHeader
+    ){
+        String token =authorizationHeader.substring(7);
+        return new ResponseEntity<PostDto>(postService.createPost(postDto,token),HttpStatus.CREATED);
     }
 
     @GetMapping
     public ResponseEntity<PostResponse> getAllPosts(
         @RequestParam(value="pageNo",defaultValue="0",required=false) int pageNo,
-        @RequestParam(value="pageSize",defaultValue="0",required=false) int pageSize
+        @RequestParam(value="pageSize",defaultValue="0",required=false) int pageSize,
+        @RequestHeader(value="Authorization") String authorizationHeader
 
     ){
-        PostResponse postDtoList=postService.getAllPosts(pageNo,pageSize);
+
+        String token =authorizationHeader.substring(7);
+        PostResponse postDtoList=postService.getAllPosts(pageNo,pageSize,token);
+        return new ResponseEntity<PostResponse>(postDtoList,HttpStatus.OK);
+    }
+
+
+    @GetMapping("/self")
+    public ResponseEntity<PostResponse> getAllPostsByUserId(
+            @RequestParam(value="pageNo",defaultValue="0",required=false) int pageNo,
+            @RequestParam(value="pageSize",defaultValue="0",required=false) int pageSize,
+            @RequestHeader(value="Authorization") String authorizationHeader
+
+    ){
+
+        String token =authorizationHeader.substring(7);
+        PostResponse postDtoList=postService.getPostsByUserId(pageNo,pageSize,token);
         return new ResponseEntity<PostResponse>(postDtoList,HttpStatus.OK);
     }
 
@@ -42,6 +66,9 @@ public class PostController {
     public ResponseEntity<PostDto> getPostById(@PathVariable("id")long id){
         return ResponseEntity.ok(postService.getPostById(id));
     }
+
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<PostDto> updatePost(@RequestBody PostDto postDto,@PathVariable("id")long id){

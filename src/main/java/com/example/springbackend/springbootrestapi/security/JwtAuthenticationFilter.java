@@ -18,9 +18,9 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    private UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -34,10 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // get JWT token from http request
         String token = getTokenFromRequest(request);
-
         // validate token
         if(StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)){
-
             // get username from token
             String username = jwtTokenProvider.getUsername(token);
 
@@ -51,7 +49,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             );
 
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         }

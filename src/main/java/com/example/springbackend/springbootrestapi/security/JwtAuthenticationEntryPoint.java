@@ -23,5 +23,4 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
              authenticationException.getMessage());
 
         }
-
 }

@@ -2,8 +2,8 @@ package com.example.springbackend.springbootrestapi.exceptions;
 import org.springframework.http.HttpStatus;
 
 public class BlogApiException extends RuntimeException {
-    private HttpStatus httpStatus;
-    private String message;
+    private final HttpStatus httpStatus;
+    private final String message;
 
     public BlogApiException(String message,HttpStatus status){
         this.httpStatus=status;
